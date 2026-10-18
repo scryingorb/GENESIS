@@ -18,6 +18,15 @@ population cycles or hidden difficulty adjustments.
 - Inspect lineage and population information in the Evolution Observatory.
 - Save worlds and recover interrupted sessions.
 
+## UI Preview
+
+![Source-generated UI preview of GENESIS with ecosystem, quick guide, and floating controls](docs/screenshots/main-interface.png)
+
+**Source-generated UI preview — not an actual application screenshot.**
+Reconstructed from the UI drawing code at 2760 × 1800, with the quick guide
+visible and Settings closed. Organism, food, and habitat placement is illustrative;
+no application or simulation was launched to create this preview.
+
 ## Technologies
 
 Python 3.11 for the Windows build, Pygame 2.6.1, unittest, PyInstaller, and Inno Setup.
