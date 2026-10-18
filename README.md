@@ -1,4 +1,8 @@
-# GENESIS — Living Ecosystem 0.13.0
+# GENESIS
+
+Python and Pygame artificial-life simulator with inherited traits, predator-prey interactions, and seeded ecosystems.
+
+## Overview
 
 A Python/Pygame artificial-life simulator with luminous cells, a quiet floating
 glass interface, predators and prey, seeded habitats, environmental events and
@@ -6,19 +10,24 @@ an Evolution Observatory. Feeding, energy costs, reproduction and inherited
 mutations determine outcomes. There are no respawns, species quotas, scripted
 population cycles or hidden difficulty adjustments.
 
-## UI Preview
+## Features
 
-![Source-generated UI preview of GENESIS with ecosystem, quick guide, and floating controls](docs/screenshots/main-interface.png)
+- Simulate feeding, energy use, reproduction, and inherited mutations.
+- Observe predators and prey in seeded habitats.
+- Configure seasonal cycles, droughts, and ecosystem recipes.
+- Inspect lineage and population information in the Evolution Observatory.
+- Save worlds and recover interrupted sessions.
 
-**Source-generated UI preview — not an actual application screenshot.**
-Reconstructed from the UI drawing code at 2760 × 1800, with the quick guide
-visible and Settings closed. Organism, food, and habitat placement is illustrative;
-no application or simulation was launched to create this preview.
+## Technologies
 
-## Launch the Windows application
+Python 3.11 for the Windows build, Pygame 2.6.1, unittest, PyInstaller, and Inno Setup.
 
-**Installer:** double-click
-`release\installer\GENESIS-0.13.0-windows-x64-setup.exe`, follow the wizard,
+## Getting Started
+
+Download the [Windows x64 version 0.13.0 release](https://github.com/scryingorb/GENESIS/releases/tag/v0.13.0).
+
+**Installer:** double-click the downloaded
+`GENESIS-0.13.0-windows-x64-setup.exe`, follow the wizard,
 and optionally select a desktop shortcut. Leave **Launch GENESIS** selected to
 open it immediately, or use **Start > GENESIS** afterward. Installation is
 per-user without administrator privileges, under
@@ -38,13 +47,13 @@ its `GENESIS` folder. Keep `_internal` beside the executable. Python and a
 terminal are not required. Extract the ZIP before launching.
 
 ```powershell
-Set-Location "C:\Users\Admin\Desktop\Coding Projects\Genesis"
+# Run from the repository root.
 Start-Process -FilePath ".\release\dist\GENESIS\GENESIS.exe"
 ```
 
 The portable ZIP is unchanged. Portable and installed copies share the same
 default user-data folder; avoid running both against it simultaneously.
-No binary release has been published or uploaded.
+The release provides both the installer and portable ZIP. The `release/` paths above describe local build outputs; downloaded files can be extracted elsewhere.
 
 ### Rebuild the installer
 
@@ -65,39 +74,37 @@ It leaves preserved test data as evidence. See [installer checks and pending
 validation](reports/installer-013/RESULTS.md). Another Windows computer without
 Python and hands-on wizard/post-install Launch checks remain pending.
 
-## The corrected ecosystem
+### Build or run from source
 
-**Living Ecosystem** is the recommended startup recipe: seed 42, 160 prey,
-8 predators, base food regeneration 28/s, 20% mutation strength, and habitats
-with independent map seed 42. Seasons and droughts are off. **Living Seasons**
-uses 18% mutation and adds a 180-second seasonal cycle, 10-second droughts and
-drought-free intervals of 120–240 seconds. Presets fill editable drafts; Start
-new applies them. Enabling events manually never silently changes mutation.
+Pygame 2.6.1 is pinned in `requirements.txt`. The Windows build uses Python
+3.11 x64 and pinned PyInstaller dependencies in `requirements-build.txt`.
 
-Ecology rules provide three renewable food resources suited to different body
-sizes. Small bodies are cheaper and harder to detect; large bodies can use
-larger food particles and predators can handle larger prey. Speed improves
-travel and escape but has propulsion and maintenance costs. Sensing increases
-food choice, warning distance and hunting range but consumes energy. Arrival
-braking prevents orbiting food; hunters predict movement, digest catches and
-pay local interference costs. Reproduction transfers parental energy and
-charges overhead. Mutations reflect at the unchanged trait bounds.
+```powershell
+# Run from the repository root.
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m genesis
 
-Cell color now follows inherited **body size 3–9**, interpolating 33 shades:
-small cyan/lime, medium orange, large pink/violet. Predators are angular and
-use a warmer palette. Food remains a golden sparkle, with three particle
-sizes. Appearance explains the mapping. Color is not fitness or adaptation.
+# Optional source recipes:
+.\.venv\Scripts\python.exe -m genesis --seasons --droughts --mutation-percent 18
+.\.venv\Scripts\python.exe -m genesis --no-predators --no-habitats
+.\.venv\Scripts\python.exe -m genesis --load "C:\My Worlds\experiment.json"
 
-The previous renderer colored every speed from 51 through 75 purple. This
-hid variation, but real convergence and predator loss also occurred. See
-[the diagnosis, exact equations and measured comparison](BALANCE_REVISION.md)
-and [the predeclared acceptance criteria](BALANCE_REVISION_PLAN.md).
+# Build an onedir executable and ZIP; runs the complete test suite:
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-Release.ps1 -SkipInstall
 
-Only the corrected ecosystem is available in the desktop app. There is no
-Classic switch or command-line option. Extinction remains possible; hour-long
-evidence does not guarantee indefinite survival.
+# Native packaged checks and matched short source/package benchmarks:
+.\.venv\Scripts\python.exe tools/make_ecology_fixture.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\Test-Release.ps1
+```
 
-## Controls and information
+Build products stay under `release/build`, `release/dist` and `release/`.
+Build metadata follows `genesis.__version__`; save format versions are separate.
+This source build command does not upload artifacts or create the separately packaged installer. No telemetry or automatic update is included.
+
+## Usage
 
 The ecosystem fills the window. The bottom glass bar contains playback, speed
 and Settings. The dismissible first-launch guide can be reopened in Appearance.
@@ -151,6 +158,38 @@ environment history retains 256 events. CSV includes simulation time, seeds,
 rules/settings, species statistics and regional occupancy. Location counts
 and population changes alone do not demonstrate adaptation. CSV requires a
 new filename and is not a resumable save.
+
+## The corrected ecosystem
+
+**Living Ecosystem** is the recommended startup recipe: seed 42, 160 prey,
+8 predators, base food regeneration 28/s, 20% mutation strength, and habitats
+with independent map seed 42. Seasons and droughts are off. **Living Seasons**
+uses 18% mutation and adds a 180-second seasonal cycle, 10-second droughts and
+drought-free intervals of 120–240 seconds. Presets fill editable drafts; Start
+new applies them. Enabling events manually never silently changes mutation.
+
+Ecology rules provide three renewable food resources suited to different body
+sizes. Small bodies are cheaper and harder to detect; large bodies can use
+larger food particles and predators can handle larger prey. Speed improves
+travel and escape but has propulsion and maintenance costs. Sensing increases
+food choice, warning distance and hunting range but consumes energy. Arrival
+braking prevents orbiting food; hunters predict movement, digest catches and
+pay local interference costs. Reproduction transfers parental energy and
+charges overhead. Mutations reflect at the unchanged trait bounds.
+
+Cell color now follows inherited **body size 3–9**, interpolating 33 shades:
+small cyan/lime, medium orange, large pink/violet. Predators are angular and
+use a warmer palette. Food remains a golden sparkle, with three particle
+sizes. Appearance explains the mapping. Color is not fitness or adaptation.
+
+The previous renderer colored every speed from 51 through 75 purple. This
+hid variation, but real convergence and predator loss also occurred. See
+[the diagnosis, exact equations and measured comparison](BALANCE_REVISION.md)
+and [the predeclared acceptance criteria](BALANCE_REVISION_PLAN.md).
+
+Only the corrected ecosystem is available in the desktop app. There is no
+Classic switch or command-line option. Extinction remains possible; hour-long
+evidence does not guarantee indefinite survival.
 
 ## Determinism, habitats and limits
 
@@ -227,36 +266,6 @@ the last completed checkpoint (normally up to two minutes plus write time).
 Slow or failing storage can extend this; clean shutdown waits for the writer.
 See [Phase 11 validation and save costs](reports/recovery-013/RESULTS.md).
 
-## Source launch, tests and rebuild
-
-Pygame 2.6.1 is pinned in `requirements.txt`. The Windows build uses Python
-3.11 x64 and pinned PyInstaller dependencies in `requirements-build.txt`.
-
-```powershell
-Set-Location "C:\Users\Admin\Desktop\Coding Projects\Genesis"
-py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
-.\.venv\Scripts\python.exe -m genesis
-
-# Optional source recipes:
-.\.venv\Scripts\python.exe -m genesis --seasons --droughts --mutation-percent 18
-.\.venv\Scripts\python.exe -m genesis --no-predators --no-habitats
-.\.venv\Scripts\python.exe -m genesis --load "C:\My Worlds\experiment.json"
-
-# Build an onedir executable and ZIP; runs the complete test suite:
-.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-Release.ps1 -SkipInstall
-
-# Native packaged checks and matched short source/package benchmarks:
-.\.venv\Scripts\python.exe tools/make_ecology_fixture.py
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\Test-Release.ps1
-```
-
-Build products stay under `release/build`, `release/dist` and `release/`.
-Build metadata follows `genesis.__version__`; save format versions are separate.
-No upload, installer, telemetry or automatic update is included.
-
 ## Validation and limitations
 
 The [final 0.13.0 release check and manual checklist](reports/recovery-013/FINAL_CHECK.md)
@@ -283,3 +292,7 @@ Historical reports describe earlier releases, not current balance:
 [desktop 0.11](DESKTOP_RELEASE.md), [Phase 9 balance](BALANCE_REPORT.md),
 [environment](ENVIRONMENT_REPORT.md), [camera](BENCHMARKS.md),
 [glass](GLASS_BENCHMARKS.md), [lineage](LINEAGE_BENCHMARKS.md).
+
+## Project Status
+
+Released: version 0.13.0 for Windows x64. Clean-machine and hands-on checks remain documented limitations.
