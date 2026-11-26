@@ -1,6 +1,7 @@
 from copy import deepcopy
 from dataclasses import asdict, replace
 import json
+import math
 from pathlib import Path
 import tempfile
 import unittest
@@ -112,6 +113,38 @@ class PersistenceTests(unittest.TestCase):
             clock.paused = paused
             loaded = restore(document(world, clock, history))
             self.assertEqual(comparable(world, clock, history), comparable(loaded.world, loaded.clock, loaded.history))
+
+    def test_checkpoint_accepts_cross_runtime_rounding_for_averages(self):
+        world, clock, history = experiment()
+        clock.advance(1)
+        data = document(world, clock, history)
+        saved_history = data["history"]
+        stats_to_check = (
+            saved_history["baseline"],
+            saved_history["samples"][0]["stats"],
+            saved_history["samples"][-1]["stats"],
+        )
+        for stats in stats_to_check:
+            stats["average_speed"] = math.nextafter(stats["average_speed"], math.inf)
+
+        latest_diagnostics = data["diagnostics"]["samples"][-1]
+        energy = math.nextafter(latest_diagnostics["prey_average_energy"], math.inf)
+        latest_diagnostics["prey_average_energy"] = energy
+        loaded = restore(data)
+        self.assertEqual(loaded.world.diagnostics.document(), data["diagnostics"])
+        self.assertEqual(asdict(loaded.history.baseline), saved_history["baseline"])
+        self.assertEqual([asdict(sample) for sample in loaded.history.samples], saved_history["samples"])
+
+        for index, stats in enumerate(stats_to_check):
+            with self.subTest(index=index):
+                speed = stats["average_speed"]
+                stats["average_speed"] = speed + 0.01
+                with self.assertRaises(SaveError):
+                    restore(data)
+                stats["average_speed"] = speed
+        latest_diagnostics["prey_average_energy"] = energy + 0.01
+        with self.assertRaises(SaveError):
+            restore(data)
 
     def test_schema_validation_rejects_corrupt_state(self):
         world, clock, history = experiment()

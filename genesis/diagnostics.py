@@ -185,7 +185,14 @@ class Diagnostics:
                         require(v<=totals[s][k] and (previous is None or v>=previous[s+'_'+k]), "sample totals")
                 require(n==row[s+'_observed_initial']+row[s+'_births']-sum(row[s+'_deaths_'+c] for c in ('energy','age','caught')), "sample population")
             if row['tick']==world.ticks:
-                require(row==d.snapshot(world), "current sample")
+                expected = d.snapshot(world)
+                # As with history trait means, float summation can differ across Python versions.
+                for species in SPECIES:
+                    key = species + '_average_energy'
+                    if row[key] is not None and expected[key] is not None:
+                        if math.isclose(row[key], expected[key], rel_tol=1e-12):
+                            expected[key] = row[key]
+                require(row == expected, "current sample")
             previous=row
         expected_last = world.ticks if not world.organisms else max(d.since_tick,world.ticks//30*30)
         require(samples[-1]['tick']==expected_last, "latest sample time")

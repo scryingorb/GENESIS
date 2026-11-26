@@ -124,6 +124,19 @@ def read_stats(raw, config):
     return Statistics(**raw)
 
 
+def same_history_stats(saved, expected):
+    # Python 3.12 changed float summation, so persisted trait averages can
+    # differ slightly from the same population's recomputed averages.
+    for name in Statistics.__dataclass_fields__:
+        actual, reference = getattr(saved, name), getattr(expected, name)
+        if actual == reference:
+            continue
+        if ("average_" not in name or actual is None or reference is None
+                or not math.isclose(actual, reference, rel_tol=1e-12)):
+            return False
+    return True
+
+
 def migrate_v1(data):
     """Expand only the exact legacy schema; normal validation checks all values."""
     data = deepcopy(data)
@@ -505,7 +518,8 @@ def restore(data) -> LoadedWorld:
     capacity = integer(history_raw["capacity"], 2, 3601, "history capacity")
     interval = integer(history_raw["interval_ticks"], 30, 30, "sampling interval")
     integer(history_raw["last_seen_tick"], ticks, ticks, "last sampled observation")
-    require(read_stats(history_raw["baseline"], config) == founder_stats, "Founder comparisons do not match the seed and settings.")
+    baseline = read_stats(history_raw["baseline"], config)
+    require(same_history_stats(baseline, founder_stats), "Founder comparisons do not match the seed and settings.")
     total = 1 + ticks // interval + int(not world.organisms and ticks % interval != 0)
     integer(history_raw["revision"], total, total, "history revision")
     dropped = integer(history_raw["dropped_samples"], max(0, total - capacity), max(0, total - capacity), "dropped history count")
@@ -526,13 +540,13 @@ def restore(data) -> LoadedWorld:
         require(previous.births <= stats.births <= births and previous.deaths <= stats.deaths <= deaths, "Non-monotonic history counters.")
         require(previous.catches <= stats.catches <= catches, "Non-monotonic catch counts.")
         if expected_tick == 0:
-            require(stats == founder_stats, "Initial history differs from founder statistics.")
+            require(same_history_stats(stats, founder_stats), "Initial history differs from founder statistics.")
         if expected_tick == ticks:
-            require(stats == statistics(world), "Latest history differs from world statistics.")
+            require(same_history_stats(stats, statistics(world)), "Latest history differs from world statistics.")
         require(stats.population > 0 or expected_kind == "extinction", "Unexpected empty historical population.")
         history.samples.append(Sample(expected_tick, item["simulation_seconds"], expected_kind, stats))
         previous = stats
-    history.baseline, history.dropped_samples = founder_stats, dropped
+    history.baseline, history.dropped_samples = baseline, dropped
     history.revision, history._last_seen_tick = total, ticks
     clock = SimulationClock(world, history.on_step)
     clock.speed, clock.accumulator, clock.paused = clock_raw["speed"], accumulator, True
